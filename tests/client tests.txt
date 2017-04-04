@@ -1,0 +1,11 @@
+c:\devtools\curl\curl -i -X POST -H "Content-Type:application/json" http://localhost:9000/api/login -d "{ 'Username': 'ygubbay', 'Password': 'hello' }"
+
+// login
+-- Valid login
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Username\":\"yehuda\",\"Password\":\"12345\" }" http://localhost:9000/api/users/login
+
+-- Invalid login
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Username\":\"Ygubbay\",\"Password\":\"Science\" }" http://localhost:9000/api/users/login
+
+// Add User
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Username\":\"Ygubbay\",\"Password\":\"Science\" }" http://localhost:9000/api/users/add

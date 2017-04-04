@@ -1,0 +1,18 @@
+{
+  "name": "node-server",
+  "version": "1.0.0",
+  "description": "NodeJS web server",
+  "main": "web.js",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "mongodb": "^2.2.25",
+    "monk": "^4.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yehuda Gubbay",
+  "license": "ISC"
+}
