@@ -9,3 +9,7 @@ c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Usernam
 
 // Add User
 c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Username\":\"Ygubbay\",\"Password\":\"Science\" }" http://localhost:9000/api/users/add
+
+
+// Add Project
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Wizbiz\" }" http://localhost:9000/api/projects
