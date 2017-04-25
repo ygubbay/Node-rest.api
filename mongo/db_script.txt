@@ -1,0 +1,4 @@
+
+
+db.createCollection('Customers')
+db.createCollection('Users')

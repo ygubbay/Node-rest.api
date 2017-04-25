@@ -13,3 +13,7 @@ c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Usernam
 
 // Add Project
 c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Wizbiz\" }" http://localhost:9000/api/projects
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Aag Mobile\" }" http://localhost:9000/api/projects
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Book4Me\" }" http://localhost:9000/api/projects
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Derugim\" }" http://localhost:9000/api/projects
+c:\devtools\curl\curl -X POST -H "Content-Type: application/json" -d "{\"Name\":\"Enerview\" }" http://localhost:9000/api/projects

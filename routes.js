@@ -8,6 +8,12 @@ var err_hdl = require('./error_handler');
 var users = require('./dal/users/users');
 var projects = require("./dal/projects/projects");
 
+var customers = require("./dal/customers/customers");
+
+
+
+var sql_client = require("./sql_server/sql_client");
+
 
 
 router.get(api_prefix + '/hello', hello);
@@ -20,6 +26,53 @@ router.get(api_prefix + '/users/all', usersAll);
 router.post(api_prefix + '/projects', projectAdd);
 router.get(api_prefix + '/projects', projectsAll);
 
+router.get(api_prefix + '/customers', customersAll);
+
+router.get(api_prefix + '/sql/customers/get', getCustomers);
+router.get(api_prefix + '/sql/customers/import', importCustomers);
+
+
+
+function getCustomers(req, res) {
+
+    sql_client.GetCustomers().then((response) => {
+        res.json(response);
+    }).catch((err) => {
+        res.json(err);
+    })
+    
+}
+
+
+function importCustomers(req, res) {
+    sql_client.GetCustomers().then((response) => {
+
+        console.log('importing', response.length, " rows");
+        
+            
+            customers.Customer.save(response).then((save_response) => {
+                
+                
+                console.log("Imported: ", response.length, " rows");
+                res.json({ status: 'ok', rows: response.length});
+                
+            }).catch((err) => {
+                console.log('SaveCustomerErr: ', err); res.json(err)
+            });
+        
+        
+    }).catch((err) => {
+        res.json(err);
+    })
+}
+
+function customersAll(req, res) {
+    customers.Customer.getAllCustomers().then(function(response) {
+        res.json(response);
+    }).catch(function(err) {
+        res.json(err);
+    })
+}
 
 function checkLogin(req, res) {
 
