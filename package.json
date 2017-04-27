@@ -5,10 +5,12 @@
   "main": "web.js",
   "dependencies": {
     "body-parser": "^1.17.1",
+    "cors": "^2.8.3",
     "express": "^4.15.2",
     "mongodb": "^2.2.25",
     "monk": "^4.0.0",
-    "tedious": "^2.0.0"
+    "tedious": "^2.0.0",
+    "validate.js": "^0.11.1"
   },
   "devDependencies": {},
   "scripts": {

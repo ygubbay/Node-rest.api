@@ -2,3 +2,20 @@
 
 db.createCollection('Customers')
 db.createCollection('Users')
+
+// generate new sequence collection (for sequencing)
+db.counters.insert(
+   {
+      name: "userid",
+      seq: 0
+   }
+)
+
+
+
+db.users.insert(
+   {
+     _id: getNextSequence("userid"),
+     name: "Bob D."
+   }
+)

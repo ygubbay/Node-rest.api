@@ -112,5 +112,81 @@ var Connection = require('tedious').Connection;
         return p;
     }  
 
+
+    function getTSEntries() {
+
+        return getSqlData('TSEntries', `SELECT tsentryid, projectid, entrydate,starttime ,
+        endtime  ,description,billable,[break],userid,isinvoiced  FROM TSEntries`);
+    }
+
+
+    function getProjects() {
+        return getSqlData('Projects', `SELECT [projectid]
+                            ,[name]
+                            ,[startdate]
+                            ,[enddate]
+                            ,[custcompanyname]
+                            ,[custcontactname]
+                            ,[custcontactemail]
+                            ,[custcontactphone]
+                            ,[invoicefolder]
+                            ,[customerid]
+                            ,[monthlyinvoiceyn]
+                            ,[paymenttermsnumber]
+                            ,[paymenttermsmonthyn]
+                            ,[salestax]
+                            ,[culturekey]
+                            ,[isactive]
+                            ,[invoicefileprefix] from Projects`);
+    }
+
+    function getSqlData(table_name, sql) {  
+        console.log(table_name);
+        console.log('------------');
+        const p = new Promise(function(resolve, reject) {
+
+            request = new Request(sql, function(err) {  
+            if (err) {  
+                console.log(err);}  
+                reject(err);
+            });  
+            var result = "";  
+            
+            var rows_obj = [];
+
+            request.on('row', function(columns) {  
+
+                var result_obj = {};    
+
+                
+                columns.forEach(function(column) {  
+                
+
+                    if (column.metadata.type.type == 'DATETIME') {
+                        result_obj[column.metadata.colName] = new Date(column.value);
+                    } 
+                    else {
+                        result_obj[column.metadata.colName] = column.value;
+                    }
+                    
+                });  
+                console.log('result_obj: ' + JSON.stringify(result_obj));
+                rows_obj.push(result_obj);
+            });  
+
+            request.on('doneProc', function(rowCount, more) {  
+                console.log('request.done:');  
+                resolve(rows_obj);
+            });  
+            connection.execSql(request);  
+                
+        });
+
+        return p;
+    }  
+
+
     exports.ConnectToSql = connectToSql;
     exports.GetCustomers = getCustomers;
+    exports.GetTSEntries = getTSEntries;
+    exports.GetProjects = getProjects;
