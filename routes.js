@@ -28,10 +28,15 @@ router.get(api_prefix + '/users/all', usersAll);
 router.post(api_prefix + '/projects', projectAdd);
 router.get(api_prefix + '/projects/:customerid', projectsAll);
 router.get(api_prefix + '/projects/active/:customerid', projectsActive);
+router.get(api_prefix + '/projects/todos/monthly/:userid/:yyyyMM', getProjectTodosInMonth);
 
 router.get(api_prefix + '/todos/day/:yyyyMMdd', todosByDay);
 router.post(api_prefix + '/todos', todosSave);
 router.delete(api_prefix + '/todos/:tsentryid', todosDelete);
+router.get(api_prefix + '/todos/day/stats/:yyyyMMdd', todosDailyStats);
+router.get(api_prefix + '/todos/monthly/:projectid/:yyyyMM', todosProjectMonthly);
+router.get(api_prefix + '/todos/monthly/:yyyyMM', todosMonthly);
+
 
 
 router.get(api_prefix + '/customers', customersAll);
@@ -199,6 +204,49 @@ function todosByDay(req, res) {
     })
 } 
 
+function todosDailyStats(req, res) {
+     var yyyyMMdd = req.params['yyyyMMdd'];
+
+
+    todos.Todo.getDailyStats(yyyyMMdd).then((response) => {
+
+        res.json(response);
+    }).catch((err) => {
+        console.log(JSON.stringify(err), JSON.stringify(err));
+        res.json(err);
+    })
+}
+
+function todosProjectMonthly(req, res) {
+
+    var yyyyMM = req.params['yyyyMM'];
+    var projectid = parseInt(req.params['projectid']);
+
+
+    todos.Todo.getProjectMonthly(projectid, yyyyMM).then((response) => {
+
+        res.json(response);
+    }).catch((err) => {
+        console.log(JSON.stringify(err), JSON.stringify(err));
+        res.json(err);
+    })
+}
+
+function todosMonthly(req, res) {
+
+    var yyyyMM = req.params['yyyyMM'];
+
+
+    todos.Todo.getMonthly(yyyyMM).then((response) => {
+
+        res.json(response);
+    }).catch((err) => {
+        console.log(JSON.stringify(err), JSON.stringify(err));
+        res.json(err);
+    })
+}
+
+
 function todosSave(req, res) {
 
     var todo = req.body;
@@ -269,4 +317,19 @@ function projectsActive(req, res) {
         res.json(err);
     })
 }
+
+function getProjectTodosInMonth(req, res) {
+    
+    var userid = parseInt(req.params['userid']);
+    var yyyyMM = req.params['yyyyMM'];
+    var yyyy = parseInt(yyyyMM.substr(0, 4));
+    var month = parseInt(yyyyMM.substr(4, 2));
+
+    projects.Project.getProjectTodosInMonth(userid, month, yyyy).then(function(response) {
+        res.json(response);
+    }).catch(function(err) {
+        res.json(err);
+    })
+}
+
 module.exports = router;

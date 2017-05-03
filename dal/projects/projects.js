@@ -20,6 +20,28 @@ class Project {
     }
 
 
+    static getProjectTodosInMonth(userid, month, year) {
+
+        console.log('year', year, 'month', month);
+
+        const fromDate = new Date(Date.UTC(year, month-1, 1));
+
+        const toYear = month == 12 ? year + 1: year;
+        const toMonth = month < 12 ? month : 0;
+        const toDate = new Date(Date.UTC(toYear, toMonth, 1));
+
+        console.log('getProjectTodosInMonth: toDate', toDate, ', fromDate', fromDate);
+
+        var collection = app.db.get('TSEntries');
+        return collection.aggregate( [ { $match: { $and: [ { entrydate: {$gte : fromDate}}, 
+                                                           { entrydate: {$lt: toDate}},
+                                                           { userid: userid }] }}, 
+                                { $group: { _id: "$projectid", count: { $sum: 1 } }}, 
+                                { $lookup: { from: "projects",  localField: "_id", foreignField: "projectid", as: "projects" }}, 
+                                { $project: { projectid: '$_id', count: 1, 'projects.name': 1, _id: 0 } } ]  );
+    }
+
+
 
     static save(obj) {
 
