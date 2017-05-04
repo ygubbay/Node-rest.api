@@ -10,6 +10,7 @@ var projects = require("./dal/projects/projects");
 
 var customers = require("./dal/customers/customers");
 var todos = require("./dal/todos/todos");
+var invoices = require("./dal/invoices/invoices");
 
 
 
@@ -47,6 +48,10 @@ router.get(api_prefix + '/sql/customers/import', importCustomers);
 
 router.get(api_prefix + '/sql/tsentries/get', getTSEntries);
 router.get(api_prefix + '/sql/tsentries/import', importTSEntries);
+
+router.get(api_prefix + '/sql/invoices/last', getInvoices);
+router.get(api_prefix + '/sql/invoices/import', importInvoices);
+
 
 
 
@@ -110,6 +115,34 @@ function importTSEntries(req, res) {
                 
             }).catch((err) => {
                 console.log('SaveTSEntryErr: ', err); res.json(err)
+            });
+        
+        
+    }).catch((err) => {
+        res.json(err);
+    })
+}
+
+
+function getInvoices(req, res) {
+
+    return json.res({ msg: 'not yet implemented'});
+    
+}
+function importInvoices(req, res) {
+    sql_client.GetInvoices().then((response) => {
+
+        console.log('importing ', response.length, " rows");
+        
+            
+            invoices.Invoice.import(response).then((save_response) => {
+                
+                
+                console.log("Imported: ", response.length, " rows");
+                res.json({ status: 'ok', rows: response.length});
+                
+            }).catch((err) => {
+                console.log('SaveInvoiceErr: ', err); res.json(err)
             });
         
         

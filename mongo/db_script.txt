@@ -4,18 +4,8 @@ db.createCollection('Customers')
 db.createCollection('Users')
 
 // generate new sequence collection (for sequencing)
-db.counters.insert(
-   {
-      name: "userid",
-      seq: 0
-   }
-)
+db.counters.insert({name: "userid", seq: 0 })
+db.counters.insert({name: "tsentryid", seq: 10000 })
 
+db.counters.insert({ name: 'invoiceid', seq: 1000})
 
-
-db.users.insert(
-   {
-     _id: getNextSequence("userid"),
-     name: "Bob D."
-   }
-)

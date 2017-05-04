@@ -120,6 +120,27 @@ var Connection = require('tedious').Connection;
     }
 
 
+   function getInvoices() {
+
+        return getSqlData('Invoices', `SELECT [invoiceid]
+                            ,[projectid]
+                            ,[invoicedate]
+                            ,[invoicestatusid]
+                            ,[paymentdate]
+                            ,[amount]
+                            ,[datecreated]
+                            ,[singleuser_yn]
+                            ,[monthlyinvoice_yn]
+                            ,[mo_periodyear]
+                            ,[mo_periodmonth]
+                            ,[salestax]
+                            ,[taxtotal]
+                            ,[amounttotal]
+                            ,[comment]
+                            ,[invoicenumber] FROM [Invoices]`);
+    }
+
+
     function getProjects() {
         return getSqlData('Projects', `SELECT [projectid]
                             ,[name]
@@ -190,3 +211,4 @@ var Connection = require('tedious').Connection;
     exports.GetCustomers = getCustomers;
     exports.GetTSEntries = getTSEntries;
     exports.GetProjects = getProjects;
+    exports.GetInvoices = getInvoices;
