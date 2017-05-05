@@ -38,6 +38,7 @@ router.get(api_prefix + '/todos/day/stats/:yyyyMMdd', todosDailyStats);
 router.get(api_prefix + '/todos/monthly/:projectid/:yyyyMM', todosProjectMonthly);
 router.get(api_prefix + '/todos/monthly/:yyyyMM', todosMonthly);
 
+router.post(api_prefix + '/invoices', invoiceSave);
 
 
 router.get(api_prefix + '/customers', customersAll);
@@ -299,6 +300,25 @@ function todosSave(req, res) {
     })
 }
 
+
+function invoiceSave(req, res) {
+
+    const invoice_save = req.body;
+    console.log('routes:invoiceSave: ', JSON.stringify(req.body))
+    invoices.Invoice.save(invoice_save).then((response) => {
+
+        console.log('InvoiceSave:', response);
+        res.json(response);
+    }).catch((err) => {
+
+        console.log('Invoice Save:', err);
+
+        if (!err.is_valid)
+            res.status(400).json(err)
+        else
+            res.status(500).json(err);
+    })
+}
 
 function todosDelete(req, res) {
 

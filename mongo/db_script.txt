@@ -3,9 +3,19 @@
 db.createCollection('Customers')
 db.createCollection('Users')
 
+//
 // generate new sequence collection (for sequencing)
+//
 db.counters.insert({name: "userid", seq: 0 })
 db.counters.insert({name: "tsentryid", seq: 10000 })
 
-db.counters.insert({ name: 'invoiceid', seq: 1000})
+db.counters.insert({ name: 'invoiceid', seq: 3000})
 
+//
+// InvoiceStatuses collection
+//
+db.InvoiceStatuses.insert( {invoicestatusid: 1, name: 'Not ready'} )
+db.InvoiceStatuses.insert( {invoicestatusid: 2, name: 'Not paid'} )
+db.InvoiceStatuses.insert( {invoicestatusid: 3, name: 'Paid'} )
+db.InvoiceStatuses.insert( {invoicestatusid: 4, name: 'Cancelled'} )
+db.InvoiceStatuses.insert( {invoicestatusid: 5, name: 'Bad debt'} )
