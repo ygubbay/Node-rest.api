@@ -7,8 +7,11 @@
     "body-parser": "^1.17.1",
     "cors": "^2.8.3",
     "express": "^4.15.2",
+    "jspdf": "^1.3.3",
+    "lodash": "^4.17.4",
     "mongodb": "^2.2.25",
     "monk": "^4.0.0",
+    "pdfmake": "^0.1.28",
     "tedious": "^2.0.0",
     "validate.js": "^0.11.1"
   },

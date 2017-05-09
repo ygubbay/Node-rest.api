@@ -141,6 +141,36 @@ var Connection = require('tedious').Connection;
     }
 
 
+    function getInvoiceEntries() {
+
+        return getSqlData('InvoiceEntries', `SELECT [invoiceentryid]
+                                            ,[invoiceid]
+                                            ,[userid]
+                                            ,[entrydate]
+                                            ,[starttime]
+                                            ,[endtime]
+                                            ,[description]
+                                            ,[break]
+                                            ,[hourlyrate]
+                                            ,[amount]
+                                            ,[tsentryid]
+                                        FROM [InvoiceEntries]`);
+    }
+
+
+    function getHourlyRates() {
+
+        return getSqlData('HourlyRates', `SELECT  [rateid]
+                            ,[amount]
+                            ,[startdate]
+                            ,[enddate]
+                            ,[projectid]
+                            ,[active]
+                            ,[userid]
+                        FROM [HourlyRates]`);
+    }
+
+
     function getProjects() {
         return getSqlData('Projects', `SELECT [projectid]
                             ,[name]
@@ -212,3 +242,5 @@ var Connection = require('tedious').Connection;
     exports.GetTSEntries = getTSEntries;
     exports.GetProjects = getProjects;
     exports.GetInvoices = getInvoices;
+    exports.GetInvoiceEntries = getInvoiceEntries;
+    exports.GetHourlyRates = getHourlyRates;

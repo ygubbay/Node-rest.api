@@ -11,9 +11,10 @@ var projects = require("./dal/projects/projects");
 var customers = require("./dal/customers/customers");
 var todos = require("./dal/todos/todos");
 var invoices = require("./dal/invoices/invoices");
+var invoiceentries = require("./dal/invoices/invoiceentries");
+var rates = require("./dal/projects/hourlyrates");
 
-
-
+const PdfMaker = require('./pdf_maker');
 
 var sql_client = require("./sql_server/sql_client");
 
@@ -31,6 +32,11 @@ router.get(api_prefix + '/projects/:customerid', projectsAll);
 router.get(api_prefix + '/projects/active/:customerid', projectsActive);
 router.get(api_prefix + '/projects/todos/monthly/:userid/:yyyyMM', getProjectTodosInMonth);
 
+router.get(api_prefix + '/hourlyrates/:projectid', getHourlyRatesForProject);
+router.get(api_prefix + '/hourlyrates/:projectid/:userid', getHourlyRateForUser);
+
+
+
 router.get(api_prefix + '/todos/day/:yyyyMMdd', todosByDay);
 router.post(api_prefix + '/todos', todosSave);
 router.delete(api_prefix + '/todos/:tsentryid', todosDelete);
@@ -39,6 +45,9 @@ router.get(api_prefix + '/todos/monthly/:projectid/:yyyyMM', todosProjectMonthly
 router.get(api_prefix + '/todos/monthly/:yyyyMM', todosMonthly);
 
 router.post(api_prefix + '/invoices', invoiceSave);
+router.get(api_prefix + '/invoices/:invoiceid/header', invoiceHeader);
+router.get(api_prefix + '/invoices/:invoiceid/todos', invoiceTodos);
+router.get(api_prefix + '/invoices/:pageindex/:pagesize', invoicesPaged);
 
 
 router.get(api_prefix + '/customers', customersAll);
@@ -52,14 +61,21 @@ router.get(api_prefix + '/sql/tsentries/import', importTSEntries);
 
 router.get(api_prefix + '/sql/invoices/last', getInvoices);
 router.get(api_prefix + '/sql/invoices/import', importInvoices);
-
-
+router.get(api_prefix + '/sql/invoiceentries/import', importInvoiceEntries);
+router.get(api_prefix + '/sql/hourlyrates', importHourlyRates);
 
 
 router.get(api_prefix + '/sql/projects/get', getProjects);
 router.get(api_prefix + '/sql/projects/import', importProjects);
 
+router.get(api_prefix + '/pdfmaker', example1);
 
+
+function example1(req, res) 
+{
+    PdfMaker.example1(res);
+    //res.json({done: true});
+}
 
 function getProjects(req, res) {
 
@@ -151,6 +167,52 @@ function importInvoices(req, res) {
         res.json(err);
     })
 }
+
+
+function importHourlyRates(req, res) {
+    sql_client.GetHourlyRates().then((response) => {
+
+        console.log('importing ', response.length, " rows");
+        
+            
+            rates.HourlyRate.import(response).then((save_response) => {
+                
+                
+                console.log("Imported: ", response.length, " rows");
+                res.json({ status: 'ok', rows: response.length});
+                
+            }).catch((err) => {
+                console.log('Save HourlyRate Err: ', err); res.json(err)
+            });
+        
+        
+    }).catch((err) => {
+        res.json(err);
+    })
+}
+
+function importInvoiceEntries(req, res) {
+    sql_client.GetInvoiceEntries().then((response) => {
+
+        console.log('importing ', response.length, " rows");
+        
+            
+            invoiceentries.InvoiceEntry.import(response).then((save_response) => {
+                
+                
+                console.log("Imported: ", response.length, " rows");
+                res.json({ status: 'ok', rows: response.length});
+                
+            }).catch((err) => {
+                console.log('SaveInvoiceEntryErr: ', err); res.json(err)
+            });
+        
+        
+    }).catch((err) => {
+        res.json(err);
+    })
+}
+
 
 function getCustomers(req, res) {
 
@@ -301,6 +363,54 @@ function todosSave(req, res) {
 }
 
 
+function invoiceTodos(req, res) {
+
+    const invoiceid = parseInt(req.params['invoiceid']);
+
+    invoiceentries.InvoiceEntry.getbyinvoiceid(invoiceid).then((response) => {
+
+        res.json(response);
+    }).catch((err) => {
+        if (!err.is_valid)
+            res.status(400).json(err)
+        else
+            res.status(500).json(err);
+    })
+}
+
+
+function invoiceHeader(req, res) {
+    const invoiceid = parseInt(req.params['invoiceid']);
+
+    invoices.Invoice.getbyinvoiceid(invoiceid).then((response) => {
+
+        res.json(response[0]);
+    }).catch((err) => {
+        if (!err.is_valid)
+            res.status(400).json(err)
+        else
+            res.status(500).json(err);
+    })
+}
+
+
+function invoicesPaged(req, res) {
+
+    const pageindex = parseInt(req.params['pageindex']);
+    const pagesize = parseInt(req.params['pagesize']);
+    
+    invoices.Invoice.getpaged(pageindex, pagesize).then((response) => {
+
+        res.json(response);
+    }).catch((err) => {
+        if (!err.is_valid)
+            res.status(400).json(err)
+        else
+            res.status(500).json(err);
+    })
+    
+}
+
 function invoiceSave(req, res) {
 
     const invoice_save = req.body;
@@ -367,6 +477,31 @@ function projectsActive(req, res) {
     projects.Project.getActiveProjects(customerid).then(function(response) {
         res.json(response);
     }).catch(function(err) {
+        res.json(err);
+    })
+}
+
+
+function getHourlyRatesForProject(req, res) {
+
+    var projectid = parseInt(req.params['projectid']);
+    
+    rates.HourlyRate.getProjectRates(projectid).then((response) =>
+    {
+        res.json(response);
+    }).catch((err) => {
+        res.json(err);
+    })
+}
+function getHourlyRateForUser(req, res) {
+
+    var projectid = parseInt(req.params['projectid']);
+    var userid = parseInt(req.params['userid']);
+
+    rates.HourlyRate.getProjectUserRate(projectid, userid).then((response) =>
+    {
+        res.json(response);
+    }).catch((err) => {
         res.json(err);
     })
 }

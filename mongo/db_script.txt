@@ -10,6 +10,9 @@ db.counters.insert({name: "userid", seq: 0 })
 db.counters.insert({name: "tsentryid", seq: 10000 })
 
 db.counters.insert({ name: 'invoiceid', seq: 3000})
+db.counters.insert({ name: 'invoiceentryid', seq: 10000})
+db.counters.insert({ name: 'rateid', seq: 500})
+
 
 //
 // InvoiceStatuses collection
