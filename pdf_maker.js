@@ -1,6 +1,12 @@
 const fs = require('fs');
 var pdfMakePrinter = require('pdfmake/src/printer');
 var fonts = {
+        Arial: {
+            normal: 'fonts/arialuni.ttf',
+            bold: 'fonts/arialuni.ttf',
+            italics: 'fonts/arialuni.ttf',
+            bolditalics: 'fonts/arialuni.ttf'
+        },
         Roboto: {
             normal: 'fonts/Roboto-Medium.ttf',
             bold: 'fonts/Squarish Sans CT Regular SC.ttf',
@@ -28,7 +34,11 @@ function example1(res) {
         from_company: {
             name: 'Nu Solutions',
             number: '319210738',
-            is_company: false
+            is_company: false,
+            phone_number: '093338888',
+            fax_number: '093338888',
+            email: 'ygubbay@gmail.com',
+            website: 'www.nusolutions.com.au'
         },
         to: {
             name: 'Enerview',
@@ -52,14 +62,21 @@ function example1(res) {
                     description: '123 PublicSite license agreement', 
                     duration: '02:14', 
                     amount: 405 }
-                    ]
+                    ],
+        total: {
+            net: 1800,
+            tax: 300,
+            grand: 2100
+        }
+
     }
 
     const from_company_type = (invoice.from_company.is_company ? 'חפ: ': 'עוסק מורשה').split("").reverse().join("");
 
-var PdfPrinter = require('pdfmake/src/printer');
+    var PdfPrinter = require('pdfmake/src/printer');
     var printer = new PdfPrinter(fonts);
-
+    const left_margin = 30;
+    const footer_top = 760;
 
     var table_todos = [];
     table_todos.push([ 'Date', 'Description', 'Duration', 'Total' ]);
@@ -70,11 +87,20 @@ var PdfPrinter = require('pdfmake/src/printer');
                                 fontSize: 10},
                             { text: todo.description, fontSize: 10 },
                             { text: todo.duration.toString(), fontSize: 10 },
-                            { text: todo.amount.toString(), fontSize: 10 }]);
+                            { text: formatCurrency(todo.amount), fontSize: 10 }]);
     }
+
+    var total_rows = [];
+    total_rows.push( [ { text: 'Net total', fontSize: 10 }, { text: formatCurrency(invoice.total.net), fontSize: 10 } ])
+    total_rows.push( [ { text: 'Vat total', fontSize: 10 }, { text: formatCurrency(invoice.total.tax), fontSize: 10 } ])
+    total_rows.push( [ { text: 'Invoice total', fontSize: 10 }, { text: formatCurrency(invoice.total.grand), fontSize: 10 } ])
+
+    
                            
 
     var docDefinition = {
+
+        pageMargins: [ 40, 60, 40, 20 ],
         content: [
             { columns: [ 
                 { text: invoice.from_company.name, width: '75%',  },
@@ -82,15 +108,15 @@ var PdfPrinter = require('pdfmake/src/printer');
                   ]              
             },
             { columns: [ 
-                { text: 'עוסק מורשה:  '.split('').reverse().join(''), font: 'Nachlaot', fontSize: 16, width: '80%',  },
+                { text: 'עוסק מורשה:  '.split('').reverse().join(''), font: 'Nachlaot', fontSize: 18, width: '80%',  },
                 { text: invoice.invoice_number, width: '20%', color: 'red' }  
                   ]              
             },
             
-            { text: invoice.from_company.number, fontSize: 12 },
-            { text: 'מקור'.split('').reverse().join(''), font: 'Nachlaot', fontSize: 24, color: 'red' },
+            { text: invoice.from_company.number, fontSize: 10 },
+            { text: 'מקור'.split('').reverse().join(''), font: 'Nachlaot', fontSize: 24, color: 'green' },
 
-            {  image: invoice.logo_file, width: 100, height: 100,  absolutePosition: {x:400, y:90} },
+            {  image: invoice.logo_file, width: 100, height: 100,  absolutePosition: {x:400, y:100} },
             {
                 margin: [0, 100, 0, 0],
                 columns: [
@@ -107,26 +133,98 @@ var PdfPrinter = require('pdfmake/src/printer');
             },
             {
                 columns: [
-                    {
+                {
                     width: '15%',
                     text: 'Contact:'
-                    },
-                    {
+                },
+                {
                     width: '80%',
                     text: invoice.to.person_name
-                    },
+                },
                     
                 ]
             },
 
+            // invoice todos
             { table: {
                 headerRows: 1,
                 widths: [ 100, 250, 60, 60 ],
                 body: table_todos                        
                 },
               margin: [0, 15, 0, 0]
+            },
+
+            // totals table
+            {
+                table: {
+                    headerRows: 1,
+                    widths: [ 60, 60 ],
+                    body: total_rows
+                },
+                margin: [368, 10, 0, 0]
+            },
+
+            // footer 
+            { columns: [
+                { width: 250, 
+                    text: 'Nu Solutions', fontSize: 12 },
+                {
+                    width: 300, 
+                    text: '', fontSize: 8  }
+                ], absolutePosition: { x: left_margin, y: footer_top }
+            },
+            {
+                columns: [
+                { width: 250, 
+                    text: 'PO Box 705', fontSize: 8 },
+                {
+                    width: 50, 
+                    text: 'Tel: ', fontSize: 8 },
+                {  width: 200,
+                   text: invoice.from_company.phone_number, fontSize: 8  }
+                ], absolutePosition: { x: left_margin, y: footer_top + 15 }
+            },
+            {
+                columns: [
+                { width: 250, 
+                    text: 'Tsufim', fontSize: 8 },
+                {
+                    width: 50, 
+                    text: 'Fax: ', fontSize: 8  },
+                {
+                    width: 200,
+                    text: invoice.from_company.fax_number, 
+                    fontSize: 8
+                }
+                ], absolutePosition: { x: left_margin, y:  footer_top + 25 }
+            },
+            {
+                columns: [
+                { width: 250, 
+                    text: 'Israel', fontSize: 8 },
+                {
+                    width: 50, 
+                    text: 'Email: ',
+                    fontSize: 8 },
+                { width: 200,
+                  text: invoice.from_company.email, fontSize: 8  }
+                ], absolutePosition: { x: left_margin, y: footer_top + 35 }
+            },
+            {
+                columns: [
+                { width: 250, 
+                    text: '', fontSize: 8 },
+                {
+                    width: 50, 
+                    text: 'Website: ',
+                    fontSize: 8 },
+                { width: 200,
+                  text: invoice.from_company.website, fontSize: 8  }
+                ], absolutePosition: { x: left_margin, y: footer_top + 45 }
             }
-            ]};
+        ]
+        };
+        
 
     var pdfDoc = printer.createPdfKitDocument(docDefinition);
 
@@ -136,6 +234,11 @@ var PdfPrinter = require('pdfmake/src/printer');
     pdfDoc.end();
 
     res.json({ finished: true})
+}
+
+
+function formatCurrency(amount) {
+    return '₪' + amount.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "₪1,");
 }
 
 
