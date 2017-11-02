@@ -48,6 +48,7 @@ router.post(api_prefix + '/invoices', invoiceSave);
 router.get(api_prefix + '/invoices/:invoiceid/header', invoiceHeader);
 router.get(api_prefix + '/invoices/:invoiceid/todos', invoiceTodos);
 router.get(api_prefix + '/invoices/:pageindex/:pagesize', invoicesPaged);
+router.post(api_prefix + '/invoices/pdf', invoicePdf);
 
 
 router.get(api_prefix + '/customers', customersAll);
@@ -343,6 +344,56 @@ function todosMonthly(req, res) {
 }
 
 
+function invoicePdf(req, res) {
+
+    var print_inv = req.body;
+    console.log('routes:pdf ', JSON.stringify(print_inv));
+
+    // const print_inv = {
+    //     from_company: {
+    //         name: 'Nu Solutions',
+    //         number: '319210738',
+    //         is_company: false,
+    //         phone_number: '093338888',
+    //         fax_number: '093338888',
+    //         email: 'ygubbay@gmail.com',
+    //         website: 'www.nusolutions.com.au'
+    //     },
+    //     to: {
+    //         name: 'Enerview',
+    //         person_name: 'Alon Eisenberg'
+    //     },
+    //     logo_file: 'images/image.png',
+    //     invoice_number: '10172',
+    //     todos: [ { invoicedate: new Date(),
+    //                 description: '123 PublicSite license agreement', 
+    //                 duration: '02:14', 
+    //                 amount: 405 },
+    //              { invoicedate: new Date(),
+    //                 description: '123 PublicSite license agreement', 
+    //                 duration: '02:14', 
+    //                 amount: 405 },
+    //             { invoicedate: new Date(),
+    //                 description: '123 PublicSite license agreement', 
+    //                 duration: '02:14', 
+    //                 amount: 405 },
+    //             { invoicedate: new Date(),
+    //                 description: '123 PublicSite license agreement', 
+    //                 duration: '02:14', 
+    //                 amount: 405 }
+    //                 ],
+    //     total: {
+    //         net: 1800,
+    //         tax: 300,
+    //         grand: 2100
+    //     }
+
+    // }
+
+    PdfMaker.example1(res, print_inv);
+}
+
+
 function todosSave(req, res) {
 
     var todo = req.body;
@@ -392,6 +443,10 @@ function invoiceHeader(req, res) {
             res.status(500).json(err);
     })
 }
+
+
+
+
 
 
 function invoicesPaged(req, res) {

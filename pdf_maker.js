@@ -28,50 +28,10 @@ var fonts = {
 };
 
 
-function example1(res) {
+function example1(res, print_inv) {
     
-    const invoice = {
-        from_company: {
-            name: 'Nu Solutions',
-            number: '319210738',
-            is_company: false,
-            phone_number: '093338888',
-            fax_number: '093338888',
-            email: 'ygubbay@gmail.com',
-            website: 'www.nusolutions.com.au'
-        },
-        to: {
-            name: 'Enerview',
-            person_name: 'Alon Eisenberg'
-        },
-        logo_file: 'images/image.png',
-        invoice_number: '10172',
-        todos: [ { invoicedate: new Date(),
-                    description: '123 PublicSite license agreement', 
-                    duration: '02:14', 
-                    amount: 405 },
-                 { invoicedate: new Date(),
-                    description: '123 PublicSite license agreement', 
-                    duration: '02:14', 
-                    amount: 405 },
-                { invoicedate: new Date(),
-                    description: '123 PublicSite license agreement', 
-                    duration: '02:14', 
-                    amount: 405 },
-                { invoicedate: new Date(),
-                    description: '123 PublicSite license agreement', 
-                    duration: '02:14', 
-                    amount: 405 }
-                    ],
-        total: {
-            net: 1800,
-            tax: 300,
-            grand: 2100
-        }
 
-    }
-
-    const from_company_type = (invoice.from_company.is_company ? 'חפ: ': 'עוסק מורשה').split("").reverse().join("");
+    const from_company_type = (print_inv.from_company.is_company ? 'חפ: ': 'עוסק מורשה').split("").reverse().join("");
 
     var PdfPrinter = require('pdfmake/src/printer');
     var printer = new PdfPrinter(fonts);
@@ -80,9 +40,10 @@ function example1(res) {
 
     var table_todos = [];
     table_todos.push([ 'Date', 'Description', 'Duration', 'Total' ]);
-    for (var i=0; i<invoice.todos.length; i++)
+    for (var i=0; i<print_inv.todos.length; i++)
     {
-        let todo = invoice.todos[i];
+        let todo = print_inv.todos[i];
+        todo.invoicedate = new Date(todo.invoicedate);
         table_todos.push([ { text: leftpad(todo.invoicedate.getDate(), 2, '0') + '-' + leftpad(todo.invoicedate.getMonth()+1, 2, '0'), 
                                 fontSize: 10},
                             { text: todo.description, fontSize: 10 },
@@ -91,10 +52,13 @@ function example1(res) {
     }
 
     var total_rows = [];
-    total_rows.push( [ { text: 'Net total', fontSize: 10 }, { text: formatCurrency(invoice.total.net), fontSize: 10 } ])
-    total_rows.push( [ { text: 'Vat total', fontSize: 10 }, { text: formatCurrency(invoice.total.tax), fontSize: 10 } ])
-    total_rows.push( [ { text: 'Invoice total', fontSize: 10 }, { text: formatCurrency(invoice.total.grand), fontSize: 10 } ])
+    //total_rows.push( [ { text: 'Net total', fontSize: 10 }, { text: formatCurrency(print_inv.total.net), fontSize: 10 } ])
+    //total_rows.push( [ { text: 'Vat total', fontSize: 10 }, { text: formatCurrency(print_inv.total.tax), fontSize: 10 } ])
+    //total_rows.push( [ { text: 'print_inv total', fontSize: 10 }, { text: formatCurrency(print_inv.total.grand), fontSize: 10 } ])
 
+    total_rows.push( [ { text: 'Net total', fontSize: 10 }, { text: print_inv.total.net.formatMoney(2, '.', ','), fontSize: 10 } ])
+    total_rows.push( [ { text: 'Vat total', fontSize: 10 }, { text: print_inv.total.tax.formatMoney(2, '.', ','), fontSize: 10 } ])
+    total_rows.push( [ { text: 'Total', fontSize: 10 }, { text: print_inv.total.grand.formatMoney(2, '.', ','), fontSize: 10 } ])
     
                            
 
@@ -103,33 +67,47 @@ function example1(res) {
         pageMargins: [ 40, 60, 40, 20 ],
         content: [
             { columns: [ 
-                { text: invoice.from_company.name, width: '75%',  },
+                { text: print_inv.from_company.name, width: '75%',  },
                 { text: 'חשבונית מס'.split('').reverse().join(''), width: '20%', font: 'Nachlaot', fontSize: 18 }  
                   ]              
             },
             { columns: [ 
                 { text: 'עוסק מורשה:  '.split('').reverse().join(''), font: 'Nachlaot', fontSize: 18, width: '80%',  },
-                { text: invoice.invoice_number, width: '20%', color: 'red' }  
+                { text: print_inv.invoice_number, width: '20%', color: 'red' }  
                   ]              
             },
             
-            { text: invoice.from_company.number, fontSize: 10 },
+            { text: print_inv.from_company.number, fontSize: 10 },
             { text: 'מקור'.split('').reverse().join(''), font: 'Nachlaot', fontSize: 24, color: 'green' },
 
-            {  image: invoice.logo_file, width: 100, height: 100,  absolutePosition: {x:400, y:100} },
+            {  image: print_inv.logo_file, width: 100, height: 100,  absolutePosition: {x:400, y:100} },
             {
                 margin: [0, 100, 0, 0],
                 columns: [
+                    {
+                    width: '15%',
+                    text: 'Invoice date:'
+                    },
+                    {
+                    width: '80%',
+                    text: new Date().toDateString()
+                    },
+                    
+                ]
+            },
+            {
+                                columns: [
                     {
                     width: '15%',
                     text: 'Invoice to:'
                     },
                     {
                     width: '80%',
-                    text: invoice.to.name
+                    text: print_inv.to.name
                     },
                     
                 ]
+
             },
             {
                 columns: [
@@ -139,7 +117,7 @@ function example1(res) {
                 },
                 {
                     width: '80%',
-                    text: invoice.to.person_name
+                    text: print_inv.to.person_name
                 },
                     
                 ]
@@ -181,7 +159,7 @@ function example1(res) {
                     width: 50, 
                     text: 'Tel: ', fontSize: 8 },
                 {  width: 200,
-                   text: invoice.from_company.phone_number, fontSize: 8  }
+                   text: print_inv.from_company.phone_number, fontSize: 8  }
                 ], absolutePosition: { x: left_margin, y: footer_top + 15 }
             },
             {
@@ -193,7 +171,7 @@ function example1(res) {
                     text: 'Fax: ', fontSize: 8  },
                 {
                     width: 200,
-                    text: invoice.from_company.fax_number, 
+                    text: print_inv.from_company.fax_number, 
                     fontSize: 8
                 }
                 ], absolutePosition: { x: left_margin, y:  footer_top + 25 }
@@ -207,7 +185,7 @@ function example1(res) {
                     text: 'Email: ',
                     fontSize: 8 },
                 { width: 200,
-                  text: invoice.from_company.email, fontSize: 8  }
+                  text: print_inv.from_company.email, fontSize: 8  }
                 ], absolutePosition: { x: left_margin, y: footer_top + 35 }
             },
             {
@@ -219,7 +197,7 @@ function example1(res) {
                     text: 'Website: ',
                     fontSize: 8 },
                 { width: 200,
-                  text: invoice.from_company.website, fontSize: 8  }
+                  text: print_inv.from_company.website, fontSize: 8  }
                 ], absolutePosition: { x: left_margin, y: footer_top + 45 }
             }
         ]
@@ -240,6 +218,17 @@ function example1(res) {
 function formatCurrency(amount) {
     return '₪' + amount.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "₪1,");
 }
+
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))), 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
 
 
 function leftpad (str, len, ch) {

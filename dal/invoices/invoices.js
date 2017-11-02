@@ -103,7 +103,7 @@ static getbyinvoiceid(invoiceid) {
                                    { $project: { 
                                     invoiceid: 1, invoicedate: 1, mo_periodyear: 1, mo_periodmonth: 1,
                                     invoicestatusid: 1, amount: 1, datecreated: 1, singleuser_yn: 1, monthlyinvoice_yn: 1, 
-                                    paymentdate: 1, salestax: 1, amounttotal: 1, comment: 1, invoicenumber: 1,
+                                    paymentdate: 1, salestax: 1, amounttotal: 1, comment: 1, invoicenumber: 1,taxtotal: 1,
                                     projectid: 1, 'projects.name': 1, 'InvoiceStatuses.name': 1 } }
 
     ])
@@ -129,7 +129,7 @@ static getpaged(pageindex, pagesize) {
                                    { $project: { 
                                     invoiceid: 1, invoicedate: 1, mo_periodyear: 1, mo_periodmonth: 1,
                                     invoicestatusid: 1, amount: 1, datecreated: 1, singleuser_yn: 1, monthlyinvoice_yn: 1, 
-                                    paymentdate: 1, salestax: 1, amounttotal: 1, comment: 1, invoicenumber: 1,
+                                    paymentdate: 1, salestax: 1, amounttotal: 1, comment: 1, invoicenumber: 1, taxtotal: 1,
                                     projectid: 1, 'projects.name': 1, 'InvoiceStatuses.name': 1 } },
                                     
                                      ]  );
@@ -138,123 +138,135 @@ static getpaged(pageindex, pagesize) {
 }
 
 
+
 static save(save_invoice) {
 
     const p = new Promise(function(resolve, reject) {
 
-        Invoice.save_header(save_invoice.header).then((response) =>
+        let invoice = null;
+        Invoice.save_header(save_invoice.header)
+        .then((response) =>
         {
 
             // Header saved
             console.log('Invoice header saved:', JSON.stringify(response), '\n');
-            
-            // Get HourlyRates in the project
-            rates.HourlyRate.getProjectRates(save_invoice.header.projectid).then((rates) =>
+            invoice = response.data.invoice;
+
+            if (!(invoice.projectid > 0)) 
             {
- 
+                throw ("Invalid invoice " + JSON.stringify(response.data) + " returned from save_header");
+            }
 
-                const invoiceid = response.data.invoiceid;
+            // Get HourlyRates in the project
+            return rates.HourlyRate.getProjectRates(invoice.projectid)
 
+        }).then((rates) =>
+        {
 
-                var todos = [];
-                console.log('invoiceid', invoiceid, ', rates:', rates);
-                _.forEach(save_invoice.todos, function (value, index) 
-                { 
-                    
-                    value.invoiceid = invoiceid; 
+            var todos = [];
+            let invoice_amount = 0;
 
-                    let current_rate = undefined;
-                    _.forEach(rates, function(rate) {
-                        if (rate.userid == value.userid)
-                        {
-                            current_rate = rate.amount;
-                        }
-                    })  
-                    if (!current_rate)
-                    {
-                        console.log('No rate was found for invoice item ' + JSON.stringify(value), '\nrates:', rates);
-                        reject('No rate was found for invoice item ' + JSON.stringify(value));
-                        return;
-                    }
-                    value.hourlyrate = current_rate;
-                    value.amount = current_rate * (((new Date(value.endtime))-(new Date(value.starttime)))/60000 - value.break) / 60;
-                    todos.push(value);
-                });
+            console.log('invoiceid:', invoice.invoiceid, ', rates:', rates);
+            _.forEach(save_invoice.todos, function (value, index) 
+            { 
                 
+                value.invoiceid = invoice.invoiceid; 
 
-                inv_entry.InvoiceEntry.savelist(todos).then((todos_saved) =>
+                let current_rate = undefined;
+                _.forEach(rates, function(rate) {
+                    if (rate.userid == value.userid)
+                    {
+                        current_rate = rate.amount;
+                    }
+                })  
+                if (!current_rate)
                 {
-                    console.log('invoice entries saved\n')
+                    console.log('No rate was found for invoice item ' + JSON.stringify(value), '\nrates:', rates);
+                    throw('No rate was found for invoice item ' + JSON.stringify(value));
+                    
+                }
+                value.hourlyrate = current_rate;
+                value.amount = current_rate * (((new Date(value.endtime))-(new Date(value.starttime)))/60000 - value.break) / 60;
+                invoice_amount += value.amount;
+                todos.push(value);
+            });
+            
+            invoice.amount = parseFloat(invoice_amount.toFixed(2));
+            invoice.tax = 17;  // need to read this
+            invoice.taxtotal = parseFloat((invoice.amount * (invoice.tax /100)).toFixed(2));
+            invoice.amounttotal = invoice.amount + invoice.taxtotal;
+            return inv_entry.InvoiceEntry.savelist(todos)
+                
+        }).then((todos_saved) =>
+        {
+            console.log('invoice entries saved\n')
+            return Invoice.save_header(invoice)
+                
+        }).then((invoice_update_response) => {
 
-                    resolve(response);
-                }).catch((err) => {
-                    console.log('invoice entries save error')
-                    const err_msg = (typeof(err) == 'object') ? JSON.stringify(err): err;
-
-                    reject('Invoice.Save: ' + err_msg);      
-                    return;
-                })
-            }).catch((err) => {
+            console.log('invoice updated with totals \n')
+            resolve(invoice);
+        })
+        
+        .catch((err) => {
                 reject(err);
                 return;
-            })
-
-            
-            
-            
-
-        }).catch((err) => {
-            reject('Invoice.Save: ' + err);      
         })
-
-        
     });
 
     return p;
-
+         
 }
+
+
 
 static save_header(save_invoice) {
         
         console.log('Invoices.save start');
-
-        //projectid, invoicedate, paymentdate, 
-
+        
         const p = new Promise(function(resolve, reject) {
 
             let obj = {};
 
             obj.invoiceid = save_invoice.invoiceid ? parseInt(save_invoice.invoiceid): 0;
-            obj.projectid = parseInt(save_invoice.projectid);
-            obj.invoicedate = save_invoice.invoice_date;
-            obj.mo_periodyear = save_invoice.invoice_year;
-            obj.mo_periodmonth = save_invoice.invoice_month;
-            
+            const is_new = (obj.invoiceid == 0);
 
-            // default fields
-            obj.invoicestatusid = 1;   // status=Not Ready
-            obj.amount = 0;
-            
-            var now = new Date(); 
-            obj.datecreated = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+            if (is_new) {
 
-            obj.singleuser_yn = true;
-            obj.monthlyinvoice_yn = true;
+                obj.projectid = parseInt(save_invoice.projectid);
+                obj.invoicedate = save_invoice.invoice_date;
+                obj.mo_periodyear = save_invoice.invoice_year;
+                obj.mo_periodmonth = save_invoice.invoice_month;
+                
 
-            // Add 2 weeks
-            var payDate = new Date(obj.invoicedate);
-            var numberOfDaysToAdd = 14;
-            payDate.setDate(payDate.getDate() + numberOfDaysToAdd);
-            obj.paymentdate = payDate;
-            //
-            // TODO: Need to get taxrate from Project data
-            //
-            obj.salestax = 17;
+                // default fields
+                obj.invoicestatusid = 1;   // status=Not Ready
+                obj.amount = 0;
+                
+                var now = new Date(); 
+                obj.datecreated = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
 
-            obj.taxtotal = 0;
-            obj.amounttotal = 0;
-            obj.comment = '';
-            obj.invoicenumber = 10000;
+                obj.singleuser_yn = true;
+                obj.monthlyinvoice_yn = true;
+
+                // Add 2 weeks
+                var payDate = new Date(obj.invoicedate);
+                var numberOfDaysToAdd = 14;
+                payDate.setDate(payDate.getDate() + numberOfDaysToAdd);
+                obj.paymentdate = payDate;
+                //
+                // TODO: Need to get taxrate from Project data
+                //
+                obj.salestax = 17;
+
+                obj.taxtotal = 0;
+                obj.amounttotal = 0;
+                obj.comment = '';
+                obj.invoicenumber = 10000;
+            }
+            else {
+                obj = save_invoice;
+            }
 
             const validation_result = Invoice.validate(obj);
             console.log('validation result:', validation_result);
@@ -266,8 +278,7 @@ static save_header(save_invoice) {
             }
             else {
 
-                const is_new = (obj.invoiceid == 0);    
-
+                
                 var collection = app.db.get('Invoices');
                 console.log('save mode:', (is_new ? 'new': ('update - ' + JSON.stringify({invoiceid: obj.invoiceid}))));
                                 
@@ -285,7 +296,7 @@ static save_header(save_invoice) {
 
                             console.log('invoices.save insert response: ', response);
                             resolve( { status: true, 
-                                        data: { invoiceid: response.invoiceid }, 
+                                        data: { invoice: response }, 
                                         error: null });
                         }).catch((err) => { 
                             console.log(err);  
@@ -302,7 +313,7 @@ static save_header(save_invoice) {
                     collection.update({invoiceid: obj.invoiceid}, obj).then((response)=> {
 
                         console.log('save response: ', response);
-                        resolve( { status: true, error: null });
+                        resolve( { status: true, data: { invoice: response }, error: null });
                     }).catch((err) => { 
                         console.log(err);  
                         reject( {status: false, error: err})
